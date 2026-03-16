@@ -40,12 +40,12 @@ venv.bak/
 .pydevproject
 .settings/
 
-# Project Specific
-out/
-backup/
-fonts/
-processed/
-*.log
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
 
 # Windows
 Thumbs.db

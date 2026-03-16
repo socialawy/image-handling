@@ -1,0 +1,30 @@
+name: Jules Maintenance
+
+on:
+  schedule:
+    - cron: '15 */1 * * *' # Run hourly (offset by 15 mins)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  jules-maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          prompt: |
+            Perform a routine maintenance sweep:
+            1. Check for and update outdated dependencies in requirements.txt.
+            2. Run a code quality scan and fix any obvious bugs or linting issues.
+            3. Enhance the image processing logic or add a small new filter from the ROADMAP.
+            4. Update README.md if any new features are added.
+            
+            Always create a clean, descriptive pull request for your changes.
