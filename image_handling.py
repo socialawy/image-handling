@@ -6,13 +6,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
-import pillow_heif  # For HEIF support
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
-import numpy as np
 
-# Register HEIF opener with Pillow
-pillow_heif.register_heif_opener()
+# Optional imports for extended format support
+try:
+    import pillow_heif  # For HEIF support
+    pillow_heif.register_heif_opener()
+    HEIF_AVAILABLE = True
+except ImportError:
+    HEIF_AVAILABLE = False
+
+try:
+    from svglib.svglib import svg2rlg
+    from reportlab.graphics import renderPM
+    SVG_AVAILABLE = True
+except ImportError:
+    SVG_AVAILABLE = False
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
 
 class ImageFormat(Enum):
     """Supported image formats"""
@@ -23,9 +37,17 @@ class ImageFormat(Enum):
     BMP = "BMP"
     TIFF = "TIFF"
     WEBP = "WEBP"
-    SVG = "SVG"
-    HEIF = "HEIF"
     HEIC = "HEIC"
+    
+    @classmethod
+    def get_supported_formats(cls):
+        """Get all supported formats based on available dependencies"""
+        formats = [cls.PNG, cls.JPG, cls.JPEG, cls.GIF, cls.BMP, cls.TIFF, cls.WEBP, cls.HEIC]
+        if HEIF_AVAILABLE:
+            formats.append(cls.HEIF)
+        if SVG_AVAILABLE:
+            formats.append(cls.SVG)
+        return formats
 
 @dataclass
 class ResizeTemplate:
@@ -340,6 +362,20 @@ class ImageToolkit:
     def __init__(self):
         self.handler = ImageHandler()
 
+    def resize_image(self, image: Image.Image, size: Tuple[int, int]) -> Image.Image:
+        """Resize an image to specific dimensions"""
+        return self.handler.resize_fixed(image, size[0], size[1])
+
+    def convert_format(self, image: Image.Image, target_format) -> Image.Image:
+        """Convert image to different format"""
+        # Handle both string and ImageFormat inputs
+        if isinstance(target_format, str):
+            try:
+                target_format = ImageFormat[target_format.upper()]
+            except:
+                target_format = ImageFormat.JPG  # Default fallback
+        return self.handler.convert_format(image, target_format)
+
     def process_for_social_media(self, input_path: str, platform: str = "instagram") -> dict:
         """Process image for various social media platforms and return paths to the optimized images"""
         image = self.handler.import_image(input_path)
@@ -436,11 +472,17 @@ class ImageToolkit:
         )
     
     def batch_convert(self, input_dir: str, output_dir: str, 
-                    target_format: ImageFormat = ImageFormat.JPG) -> List[Path]:
+                    target_format: str = "JPG") -> List[Path]:
         """Batch convert images to a specific format"""
         
+        # Convert string to ImageFormat enum once
+        try:
+            target_enum = ImageFormat[target_format.upper()]
+        except:
+            target_enum = ImageFormat.JPG  # Default fallback
+        
         def convert_operation(handler, image, **kwargs):
-            return handler.convert_format(image, kwargs.get('target_format'))
+            return handler.convert_format(image, target_enum)
         
         input_dir = Path(input_dir)
         output_dir = Path(output_dir)
@@ -455,9 +497,9 @@ class ImageToolkit:
                 try:
                     image = self.handler.import_image(file_path)
                     # Get new filename with target extension
-                    new_filename = f"{file_path.stem}.{target_format.value.lower()}"
+                    new_filename = f"{file_path.stem}.{target_enum.value.lower()}"
                     output_path = output_dir / new_filename
-                    self.handler.export_image(image, output_path, target_format)
+                    self.handler.export_image(image, output_path, target_enum)
                     processed_files.append(output_path)
                 except Exception as e:
                     print(f"Error processing {file_path}: {str(e)}")
