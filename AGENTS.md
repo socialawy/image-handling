@@ -3,6 +3,10 @@
 ## Project Overview
 A versatile Python toolkit for image processing, featuring both a GUI (Tkinter) and a well-defined API. It handles resizing, conversions, and social media optimizations.
 
+## Important Accounts
+- **GitHub Owner**: `socialawy-dev`
+- **Primary Contact**: `ahmed.itc@gmail.com`
+
 ## Tech Stack
 - **Language**: Python 3.8+
 - **Core Library**: Pillow (PIL)
