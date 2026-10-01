@@ -21,7 +21,7 @@ class SizeTemplate:
     name: str = ""
     description: str = ""
 
-class StandardSizes(Enum):
+class UIStandardSizes(Enum):
     # Social Media
     INSTAGRAM_SQUARE = SizeTemplate(1080, 1080, "Instagram Square", "1:1 aspect ratio")
     INSTAGRAM_PORTRAIT = SizeTemplate(1080, 1350, "Instagram Portrait", "4:5 aspect ratio")

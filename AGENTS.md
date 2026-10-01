@@ -151,3 +151,32 @@ print('✓ Batch processing test setup complete')
 5. **Code Quality**: Maintain high test coverage and documentation
 
 This document serves as a comprehensive guide for Jules AI assistant to effectively maintain, enhance, and support the Image Handling Tool project.
+
+<!-- shared-agent-rules:start -->
+# Shared Working Rules
+
+## Finish the scoped work
+
+- Complete every requested item that is inside the approved scope.
+- If one item is genuinely blocked, finish the rest and state the exact blocker in one sentence.
+- Do not stop at a plan or progress report when the user asked for implementation.
+
+## Act within the approved scope
+
+- Do reversible, low-cost, in-scope work without extra confirmation. This includes research, data collection, analysis, drafts, refactors, and relevant tests.
+- Ask before an action that reaches an external audience, is difficult to undo, or can create meaningful cost.
+- If a problem inside the approved scope can be fixed safely, fix it and verify the result.
+
+## Treat questions as questions
+
+- When the user asks a question, answer it. Do not change files or systems unless the user asks for implementation.
+- If the intent is unclear, answer first and wait before making changes.
+
+## Communicate simply
+
+- Use short words, short sentences, and short paragraphs.
+- Give only the needed information: what changed, whether it worked, and what the user should do next.
+- When the user must choose, give at most two options, explain the key trade-off, and recommend one.
+- Keep paths and commands exact.
+- For English, use ASD-STE100 Simplified Technical English when practical. For Arabic, use clear, simple Arabic with the same principles.
+<!-- shared-agent-rules:end -->

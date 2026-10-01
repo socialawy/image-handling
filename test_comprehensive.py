@@ -45,9 +45,9 @@ def test_python_environment():
     # Python version
     version = sys.version_info
     if version.major >= 3 and version.minor >= 8:
-        print(f"  ✓ Python {version.major}.{version.minor}.{version.micro}")
+        print(f"  [PASS] Python {version.major}.{version.minor}.{version.micro}")
     else:
-        print(f"  ✗ Python {version.major}.{version.minor} (need 3.8+)")
+        print(f"  [FAIL] Python {version.major}.{version.minor} (need 3.8+)")
         return False
     
     # Core dependencies
@@ -68,23 +68,23 @@ def test_python_environment():
     # Test core modules
     for module, name in core_modules.items():
         if module == 'PIL' and not PIL_AVAILABLE:
-            print(f"  ✗ {name} - NOT INSTALLED (Required)")
+            print(f"  [FAIL] {name} - NOT INSTALLED (Required)")
             all_ok = False
         else:
             try:
                 __import__(module)
-                print(f"  ✓ {name}")
+                print(f"  [PASS] {name}")
             except ImportError:
-                print(f"  ✗ {name} - NOT INSTALLED (Required)")
+                print(f"  [FAIL] {name} - NOT INSTALLED (Required)")
                 all_ok = False
     
     # Test optional modules
     for module, name in optional_modules.items():
         try:
             __import__(module)
-            print(f"  ✓ {name}")
+            print(f"  [PASS] {name}")
         except ImportError:
-            print(f"  ⚠ {name} - NOT INSTALLED (Optional)")
+            print(f"  [WARN] {name} - NOT INSTALLED (Optional)")
     
     return all_ok
 
@@ -102,61 +102,66 @@ def test_api_functionality():
         
         # Test ImageHandler
         handler = ImageHandler()
-        print("  ✓ ImageHandler initialization")
+        print("  [PASS] ImageHandler initialization")
         
         # Test ImageToolkit
         toolkit = ImageToolkit()
-        print("  ✓ ImageToolkit initialization")
+        print("  [PASS] ImageToolkit initialization")
         
         # Create test image
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix='.png')
+        os.close(tmp_fd)
+        try:
             # Create a simple test image
             test_img = Image.new('RGB', (100, 100), color='red')
-            test_img.save(tmp.name)
+            test_img.save(tmp_path)
             
             # Test image loading
-            loaded_img = handler.import_image(tmp.name)
+            loaded_img = handler.import_image(tmp_path)
             if loaded_img:
-                print("  ✓ Image import functionality")
+                print("  [PASS] Image import functionality")
             else:
-                print("  ✗ Image import failed")
+                print("  [FAIL] Image import failed")
                 return False
             
             # Test resize
             resized = toolkit.resize_image(loaded_img, (50, 50))
             if resized and resized.size == (50, 50):
-                print("  ✓ Image resize functionality")
+                print("  [PASS] Image resize functionality")
             else:
-                print("  ✗ Image resize failed")
+                print("  [FAIL] Image resize failed")
                 return False
             
             # Test format conversion
             output_dir = tempfile.mkdtemp()
-            # Convert the image object first, then export
-            converted_image = toolkit.convert_format(loaded_img, 'JPEG')
-            if converted_image:
-                # Export the converted image
-                output_path = os.path.join(output_dir, "test_converted.jpg")
-                from image_handling import ImageFormat
-                toolkit.handler.export_image(converted_image, output_path, ImageFormat.JPEG)
-                converted = [output_path]
-            else:
-                converted = []
-            
-            if converted and len(converted) > 0:
-                print("  ✓ Format conversion functionality")
-            else:
-                print("  ✗ Format conversion failed")
-                return False
-            
-            # Cleanup
-            os.unlink(tmp.name)
-            shutil.rmtree(output_dir)
+            try:
+                # Convert the image object first, then export
+                converted_image = toolkit.convert_format(loaded_img, 'JPEG')
+                if converted_image:
+                    # Export the converted image
+                    output_path = os.path.join(output_dir, "test_converted.jpg")
+                    from image_handling import ImageFormat
+                    toolkit.handler.export_image(converted_image, output_path, ImageFormat.JPEG)
+                    converted = [output_path]
+                else:
+                    converted = []
+                
+                if converted and len(converted) > 0:
+                    print("  [PASS] Format conversion functionality")
+                else:
+                    print("  [FAIL] Format conversion failed")
+                    return False
+            finally:
+                shutil.rmtree(output_dir)
+        
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
         
         return True
         
     except Exception as e:
-        print(f"  ✗ API test failed: {str(e)}")
+        print(f"  [FAIL] API test failed: {str(e)}")
         return False
 
 
@@ -170,35 +175,37 @@ def test_social_media_templates():
         toolkit = ImageToolkit()
         
         # Create test image
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix='.png')
+        os.close(tmp_fd)
+        try:
             test_img = Image.new('RGB', (1080, 720), color='blue')
-            test_img.save(tmp.name)
+            test_img.save(tmp_path)
             
             # Test Instagram optimization
-            instagram_result = toolkit.process_for_social_media(tmp.name, 'instagram')
+            instagram_result = toolkit.process_for_social_media(tmp_path, 'instagram')
             if instagram_result:
-                print("  ✓ Instagram optimization")
+                print("  [PASS] Instagram optimization")
             else:
-                print("  ✗ Instagram optimization failed")
+                print("  [FAIL] Instagram optimization failed")
                 return False
             
             # Test multiple platforms
             platforms = ['facebook', 'twitter', 'linkedin']
             for platform in platforms:
-                result = toolkit.process_for_social_media(tmp.name, platform)
+                result = toolkit.process_for_social_media(tmp_path, platform)
                 if result:
-                    print(f"  ✓ {platform.title()} optimization")
+                    print(f"  [PASS] {platform.title()} optimization")
                 else:
-                    print(f"  ✗ {platform.title()} optimization failed")
+                    print(f"  [FAIL] {platform.title()} optimization failed")
                     return False
-            
-            # Cleanup
-            os.unlink(tmp.name)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
         
         return True
         
     except Exception as e:
-        print(f"  ✗ Social media test failed: {str(e)}")
+        print(f"  [FAIL] Social media test failed: {str(e)}")
         return False
 
 
@@ -225,17 +232,17 @@ def test_batch_processing():
         # Test batch conversion
         results = toolkit.batch_convert(input_dir, output_dir, 'JPEG')
         if len(results) == 3:
-            print("  ✓ Batch conversion")
+            print("  [PASS] Batch conversion")
         else:
-            print("  ✗ Batch conversion failed")
+            print("  [FAIL] Batch conversion failed")
             return False
         
         # Test batch resize
         results = toolkit.batch_resize(input_dir, output_dir, width=50, height=50)
         if len(results) == 3:
-            print("  ✓ Batch resize")
+            print("  [PASS] Batch resize")
         else:
-            print("  ✗ Batch resize failed")
+            print("  [FAIL] Batch resize failed")
             return False
         
         # Cleanup
@@ -245,7 +252,7 @@ def test_batch_processing():
         return True
         
     except Exception as e:
-        print(f"  ✗ Batch processing test failed: {str(e)}")
+        print(f"  [FAIL] Batch processing test failed: {str(e)}")
         return False
 
 
@@ -259,23 +266,23 @@ def test_gui_components():
         spec = importlib.util.spec_from_file_location("image_editor_ui", "image_editor_ui.py")
         
         if spec and spec.loader:
-            print("  ✓ GUI module structure valid")
+            print("  [PASS] GUI module structure valid")
         else:
-            print("  ✗ GUI module structure invalid")
+            print("  [FAIL] GUI module structure invalid")
             return False
         
         # Test required GUI dependencies
         try:
             import tkinter
-            print("  ✓ Tkinter available")
+            print("  [PASS] Tkinter available")
         except ImportError:
-            print("  ✗ Tkinter not available")
+            print("  [FAIL] Tkinter not available")
             return False
         
         return True
         
     except Exception as e:
-        print(f"  ✗ GUI test failed: {str(e)}")
+        print(f"  [FAIL] GUI test failed: {str(e)}")
         return False
 
 
@@ -297,9 +304,9 @@ def test_project_structure():
     all_ok = True
     for file in required_files:
         if Path(file).exists():
-            print(f"  ✓ {file}")
+            print(f"  [PASS] {file}")
         else:
-            print(f"  ✗ {file} - MISSING")
+            print(f"  [FAIL] {file} - MISSING")
             all_ok = False
     
     return all_ok
@@ -326,7 +333,7 @@ def main():
             result = test_func()
             results.append((name, result))
         except Exception as e:
-            print(f"\n✗ {name} failed with error: {e}")
+            print(f"\n[FAIL] {name} failed with error: {e}")
             results.append((name, False))
     
     # Summary
@@ -338,17 +345,17 @@ def main():
     total = len(results)
     
     for name, result in results:
-        status = "✓ PASS" if result else "✗ FAIL"
+        status = "[PASS]" if result else "[FAIL]"
         print(f"{status} - {name}")
     
     print("\n" + "=" * 70)
     
     if passed == total:
-        print("✓ ALL TESTS PASSED!")
+        print("[PASS] ALL TESTS PASSED!")
         print("The Image Handling Tool is ready for community use!")
         return 0
     else:
-        print(f"✗ {total - passed} TESTS FAILED")
+        print(f"[FAIL] {total - passed} TESTS FAILED")
         print("Please address the issues above before community release.")
         return 1
 

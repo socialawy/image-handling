@@ -50,3 +50,11 @@ venv.bak/
 # Windows
 Thumbs.db
 Desktop.ini
+
+# Folders
+out/
+tests/
+test_results.txt
+
+# Local test output
+test_results*.txt

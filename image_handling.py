@@ -88,18 +88,19 @@ class ImageHandler:
             return self._import_svg(file_path)
             
         try:
-            image = Image.open(file_path)
-            # Convert to RGB if necessary (for compatibility)
-            if image.mode in ('RGBA', 'LA', 'P'):
-                if image.mode == 'P':
-                    image = image.convert('RGBA')
-                background = Image.new('RGB', image.size, (255, 255, 255))
-                if image.mode == 'RGBA':
-                    background.paste(image, mask=image.split()[3])
-                else:
-                    background.paste(image)
-                return background
-            return image.convert('RGB')
+            with Image.open(file_path) as image:
+                image.load()  # Force load pixel data
+                # Convert to RGB if necessary (for compatibility)
+                if image.mode in ('RGBA', 'LA', 'P'):
+                    if image.mode == 'P':
+                        image = image.convert('RGBA')
+                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    if image.mode == 'RGBA':
+                        background.paste(image, mask=image.split()[3])
+                    else:
+                        background.paste(image)
+                    return background
+                return image.convert('RGB')
         except Exception as e:
             raise ValueError(f"Failed to import image: {str(e)}")
     
